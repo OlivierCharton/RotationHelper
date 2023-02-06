@@ -1,49 +1,57 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Content;
 using Blish_HUD.Controls;
-using Gw2Sharp.WebApi.V2.Models;
 using Japyx.Modules.Core.Controls;
-using Japyx.RotationHelper.Controls;
-//using Japyx.RotationHelper.Controls.ImageToggle;
-using Japyx.RotationHelper.Models;
-using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using static Japyx.RotationHelper.Services.TextureManager;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
-using FlowPanel = Japyx.Modules.Core.Controls.FlowPanel;
-using TextBox = Japyx.Modules.Core.Controls.TextBox;
 using Japyx.Modules.Core.Models;
+using Japyx.RotationHelper.Controls;
+using Japyx.RotationHelper.Models;
+using Japyx.RotationHelper.Services;
+using Microsoft.Xna.Framework;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using static Japyx.RotationHelper.Services.TextureManager;
+using FlowPanel = Japyx.Modules.Core.Controls.FlowPanel;
+using Point = Microsoft.Xna.Framework.Point;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
+using StandardWindow = Japyx.Modules.Core.Views.StandardWindow;
+using TextBox = Japyx.Modules.Core.Controls.TextBox;
 
 namespace Japyx.RotationHelper.Views
 {
     public class MainWindow : StandardWindow
     {
+        private readonly SettingsModel _settings;
+        private readonly TextureManager _textureManager;
+        private readonly ObservableCollection<RotationModel> _rotationModels;
+        private readonly Data _data;
+        private readonly AsyncTexture2D _windowEmblem = AsyncTexture2D.FromAssetId(156015); //TODO: changer icone
+
+        private readonly ImageButton _addRotationButton;
+
+        private readonly bool _created;
+
+
+
+
+
         public FlowPanel ContentPanel { get; private set; }
         public FlowPanel RotationPanel { get; private set; }
 
 
-        public List<RotationControl> RotationControls { get; set; } = new();
+        public List<RotationCard> RotationCards { get; } = new();
 
-
-        private readonly bool _created;
 
         private readonly FlowPanel _dropdownPanel;
         private readonly TextBox _filterBox;
         private readonly FlowPanel _buttonPanel;
-        private readonly ImageButton _addRotationButton;
 
-        public MainWindow(AsyncTexture2D background, Rectangle windowRegion, Rectangle contentRegion, SettingsModel settings) : base(background, windowRegion, contentRegion)
+        public MainWindow(AsyncTexture2D background, Rectangle windowRegion, Rectangle contentRegion, SettingsModel settings, TextureManager textureManager, ObservableCollection<RotationModel> rotationModels, Data data) 
+            : base(background, windowRegion, contentRegion)
         {
-            Services.TextureManager tM = RotationHelper.Instance.TextureManager;
-
-            Parent = GameService.Graphics.SpriteScreen;
-            Title = "Rotation Helper";
-            SavesPosition = true;
-            Id = $"MainWindow";
-            CanResize = true;
-            Size = new Point(385, 920);
-
+            _settings = settings;
+            _textureManager = textureManager;
+            _rotationModels= rotationModels;
+            _data = data;
             ContentPanel = new FlowPanel()
             {
                 Parent = this,
@@ -87,6 +95,8 @@ namespace Japyx.RotationHelper.Views
                 Width = 100
             };
 
+            //TODO: actions du filtre
+
             _buttonPanel = new FlowPanel()
             {
                 Parent = _dropdownPanel,
@@ -101,17 +111,21 @@ namespace Japyx.RotationHelper.Views
             {
                 Parent = _buttonPanel,
                 Size = new(25, 25),
-                Location = new(),
-                Texture = tM.GetControlTexture(ControlTextures.Plus_Button),
-                HoveredTexture = tM.GetControlTexture(ControlTextures.Plus_Button_Hovered),
+                Texture = _textureManager.GetControlTexture(ControlTextures.Plus_Button),
+                HoveredTexture = _textureManager.GetControlTexture(ControlTextures.Plus_Button_Hovered),
                 SetLocalizedTooltip = () => "Ajouter une rotation",
-                ClickAction = (m) => RotationHelper.Instance.RotationWindow.ToggleWindow()
+                ClickAction = (m) => RotationWindow.ToggleWindow()
             };
 
 
-            CreateRotationControls(RotationHelper.Instance.RotationModels);
+            CreateRotationControls(_rotationModels);
             _created = true;
         }
+
+        public RotationWindow RotationWindow { get; set; }
+
+
+
 
         private void ButtonPanel_Resized(object sender, ResizedEventArgs e)
         {
@@ -131,9 +145,7 @@ namespace Japyx.RotationHelper.Views
 
                 if (_dropdownPanel != null)
                 {
-                    //_dropdownPanel.Size = new Point(ContentRegion.Size.X, 31);
                     _filterBox.Width = _dropdownPanel.Width - _buttonPanel.Width - 2;
-                    //_clearButton.Location = new Point(_filterBox.LocalBounds.Right - 23, _filterBox.LocalBounds.Top + 6);
                 }
 
                 if (e.CurrentSize.Y < 135)
@@ -141,20 +153,18 @@ namespace Japyx.RotationHelper.Views
                     Size = new Point(Size.X, 135);
                 }
 
-                //Settings.WindowSize.Value = Size;
-                //SetSideMenuPosition();
+                //_settings.WindowSize.Value = Size;
             }
         }
 
         public void CreateRotationControls(IEnumerable<RotationModel> models)
         {
-            foreach (RotationModel c in models)
+            foreach (RotationModel r in models)
             {
-                if (RotationControls.Find(e => e.Rotation.Name == c.Name) == null)
+                if (RotationCards.Find(e => e.Rotation.Name == r.Name) == null)
                 {
-                    RotationControls.Add(new RotationControl()
+                    RotationCards.Add(new RotationCard(r, _textureManager, _data, this, _settings)
                     {
-                        Rotation = c,
                         Parent = RotationPanel
                     });
                 }

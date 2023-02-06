@@ -1,4 +1,5 @@
-﻿using Japyx.Modules.Core.Extensions;
+﻿using Blish_HUD.Modules.Managers;
+using Japyx.Modules.Core.Extensions;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -8,15 +9,17 @@ namespace Japyx.RotationHelper.Services
 {
     public class TextureManager : IDisposable
     {
+        private readonly ContentsManager _contentsManager;
+
         private readonly List<Texture2D> backgrounds = new List<Texture2D>();
         private readonly List<Texture2D> icons = new List<Texture2D>();
         private readonly List<Texture2D> controls = new List<Texture2D>();
 
         private bool disposed = false;
 
-        public TextureManager()
+        public TextureManager(ContentsManager contentsManager)
         {
-            Blish_HUD.Modules.Managers.ContentsManager contentsManager = RotationHelper.Instance.ContentsManager;
+            _contentsManager = contentsManager;
 
             Array values = Enum.GetValues(typeof(Backgrounds));
             if (values.Length > 0)
@@ -24,7 +27,7 @@ namespace Japyx.RotationHelper.Services
                 backgrounds = new List<Texture2D>(new Texture2D[values.Cast<int>().Max() + 1]);
                 foreach (Backgrounds num in values)
                 {
-                    Texture2D texture = contentsManager.GetTexture(@"textures\backgrounds\" + (int)num + ".png");
+                    Texture2D texture = _contentsManager.GetTexture(@"textures\backgrounds\" + (int)num + ".png");
                     if (texture != null)
                     {
                         backgrounds.Insert((int)num, texture);
@@ -38,7 +41,7 @@ namespace Japyx.RotationHelper.Services
                 icons = new List<Texture2D>(new Texture2D[values.Cast<int>().Max() + 1]);
                 foreach (Icons num in values)
                 {
-                    Texture2D texture = contentsManager.GetTexture(@"textures\icons\" + (int)num + ".png");
+                    Texture2D texture = _contentsManager.GetTexture(@"textures\icons\" + (int)num + ".png");
                     if (texture != null)
                     {
                         icons.Insert((int)num, texture);
@@ -52,7 +55,7 @@ namespace Japyx.RotationHelper.Services
                 controls = new List<Texture2D>(new Texture2D[values.Cast<int>().Max() + 1]);
                 foreach (ControlTextures num in values)
                 {
-                    Texture2D texture = contentsManager.GetTexture(@"textures\controls\" + (int)num + ".png");
+                    Texture2D texture = _contentsManager.GetTexture(@"textures\controls\" + (int)num + ".png");
                     if (texture != null)
                     {
                         controls.Insert((int)num, texture);

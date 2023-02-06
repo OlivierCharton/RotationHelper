@@ -3,8 +3,12 @@ using Blish_HUD.Content;
 using Japyx.Modules.Core.Models;
 using Japyx.Modules.Core.Views;
 using Japyx.RotationHelper.Models;
+using Japyx.RotationHelper.Services;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Xml.Linq;
 using FlowPanel = Japyx.Modules.Core.Controls.FlowPanel;
 using Label = Japyx.Modules.Core.Controls.Label;
 using Panel = Japyx.Modules.Core.Controls.Panel;
@@ -20,13 +24,21 @@ namespace Japyx.RotationHelper.Views
         private readonly FlowPanel _contentPanel;
         private readonly SharedSettingsView _sharedSettingsView;
         private readonly SettingsModel _settings;
+        private readonly ObservableCollection<RotationModel> _rotationModels;
+        private readonly string _modulePath;
+        private readonly Data _data;
+        private readonly Action _requestSave;
         private double _tick;
 
 
-        public RotationWindow(AsyncTexture2D background, Rectangle windowRegion, Rectangle contentRegion, SharedSettingsView sharedSettingsView, SettingsModel settings) : base(background, windowRegion, contentRegion)
+        public RotationWindow(AsyncTexture2D background, Rectangle windowRegion, Rectangle contentRegion, SharedSettingsView sharedSettingsView, SettingsModel settings, ObservableCollection<RotationModel> rotationModels, string modulePath, Data data, Action requestSave, RotationModel rotation = null) : base(background, windowRegion, contentRegion)
         {
             _sharedSettingsView = sharedSettingsView;
             _settings = settings;
+            _rotationModels = rotationModels;
+            _modulePath = modulePath;
+            _data = data;
+            _requestSave = requestSave;
             _contentPanel = new()
             {
                 Parent = this,
@@ -77,17 +89,13 @@ namespace Japyx.RotationHelper.Views
             };
 
             var i = 1;
-            while (RotationHelper.Instance.RotationModels.Count(r => r.Name == rotation.Name) > 0)
+            while (_rotationModels.Count(r => r.Name == rotation.Name) > 0)
             {
-                rotation.Name = $"{inputName}({i})";
+                rotation.Name = $"{input}({i})";
                 i++;
             }
 
-            RotationHelper.Instance.RotationModels.Add(rotation);
-
-            rotation.Initialize();
-
-            RotationHelper.Instance.SaveRotations = true;
+            _rotationModels.Add(new(rotation.Name, _modulePath, _requestSave, _rotationModels, _data));
         }
     }
 }

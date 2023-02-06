@@ -1,11 +1,7 @@
 ﻿using Blish_HUD;
 using Blish_HUD.Content;
-using Blish_HUD.Gw2Mumble;
 using Blish_HUD.Modules;
-using Blish_HUD.Modules.Managers;
 using Blish_HUD.Settings;
-using Gw2Sharp.WebApi.V2;
-using Gw2Sharp.WebApi.V2.Models;
 using Japyx.Modules.Core.Models;
 using Japyx.RotationHelper.Models;
 using Japyx.RotationHelper.Services;
@@ -18,7 +14,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using static Japyx.RotationHelper.Services.TextureManager;
 using CornerIcon = Japyx.Modules.Core.Controls.CornerIcon;
@@ -52,69 +47,9 @@ namespace Japyx.RotationHelper
         public TextureManager TextureManager { get; private set; }
         public ObservableCollection<RotationModel> RotationModels { get; set; } = new();
         public Data Data { get; private set; }
-        public string GlobalAccountsPath { get; set; }
         public string RotationsPath { get; set; }
-        public string AccountPath { get; set; }
-        public GW2API_Handler GW2APIHandler { get; private set; }
-
-        public void UpdateFolderPaths(string accountName, bool api_handled = true)
-        {
-            Paths.AccountName = accountName;
-
-            string b = Paths.ModulePath;
-
-            AccountPath = b + accountName;
-            RotationsPath = b + accountName + @"\rotations.json";
-
-            if (!Directory.Exists(AccountPath))
-            {
-                _ = Directory.CreateDirectory(AccountPath);
-            }
-
-            if (api_handled && RotationModels.Count == 0)
-            {
-                _ = LoadRotations();
-            }
-        }
 
         public bool LoadRotations()
-        {
-            PlayerCharacter player = GameService.Gw2Mumble.PlayerCharacter;
-
-            if (player == null || string.IsNullOrEmpty(player.Name))
-            {
-                return false;
-            }
-
-            AccountSummary getAccount()
-            {
-                try
-                {
-                    string path = GlobalAccountsPath;
-                    if (File.Exists(path))
-                    {
-                        string content = File.ReadAllText(path);
-                        List<AccountSummary> accounts = JsonConvert.DeserializeObject<List<AccountSummary>>(content);
-                        return accounts.Find(e => e.CharacterNames.Contains(player.Name));
-                    }
-                }
-                catch { }
-
-                return null;
-            }
-
-            AccountSummary account = getAccount();
-            if (account != null)
-            {
-                Logger.Debug($"Found '{player.Name}' in a stored character list for '{account.AccountName}'. Loading characters of '{account.AccountName}'");
-                UpdateFolderPaths(account.AccountName, false);
-                return LoadRotationsFile();
-            }
-
-            return false;
-        }
-
-        public bool LoadRotationsFile()
         {
             try
             {
@@ -122,7 +57,6 @@ namespace Japyx.RotationHelper
                 {
                     FileInfo infos = new(RotationsPath);
                     string content = File.ReadAllText(RotationsPath);
-                    PlayerCharacter player = GameService.Gw2Mumble.PlayerCharacter;
                     List<RotationModel> rotations = JsonConvert.DeserializeObject<List<RotationModel>>(content);
 
                     if (rotations != null)
@@ -157,36 +91,6 @@ namespace Japyx.RotationHelper
             File.WriteAllText(RotationsPath, json);
         }
 
-        public void AddOrUpdateRotation(List<RotationModel> rotations)
-        {
-            var freshList = rotations.Select(c => new { c.Name }).ToList();
-            var oldList = RotationModels.Select(c => new { c.Name }).ToList();
-
-            for (int i = 0; i < RotationModels.Count; i++)
-            {
-                RotationModel c = RotationModels[i];
-                if (!freshList.Contains(new { c.Name }))
-                {
-                    c.Delete();
-                }
-            }
-
-            foreach (var c in rotations)
-            {
-                if (!oldList.Contains(new { c.Name }))
-                {
-                    RotationModels.Add(new(c.Name, Paths.ModulePath, RequestRotationSave, RotationModels, Data));
-                }
-                else
-                {
-                    var rotation = RotationModels.FirstOrDefault(e => e.Name == c.Name);
-                    rotation?.UpdateRotation(c.Name);
-                }
-            }
-
-            SaveRotationList();
-        }
-
         protected override void Initialize()
         {
             base.Initialize();
@@ -199,13 +103,9 @@ namespace Japyx.RotationHelper
                 NullValueHandling = NullValueHandling.Ignore,
             };
 
-            GlobalAccountsPath = Paths.ModulePath + @"\accounts.json";
-
-            Gw2ApiManager.SubtokenUpdated += Gw2ApiManager_SubtokenUpdated;
+            RotationsPath = Paths.ModulePath + "rotations.json";
 
             Settings.Version.Value = BaseVersion;
-
-            GW2APIHandler = new GW2API_Handler(Gw2ApiManager, AddOrUpdateRotation, GlobalAccountsPath, UpdateFolderPaths);
         }
 
         protected override void DefineSettings(SettingCollection settings)
@@ -222,13 +122,6 @@ namespace Japyx.RotationHelper
 
             _ticks.APIUpdate += gameTime.ElapsedGameTime.TotalSeconds;
             _ticks.Save += gameTime.ElapsedGameTime.TotalMilliseconds;
-
-            if (_ticks.APIUpdate > 300)
-            {
-                _ticks.APIUpdate = 0;
-
-                _ = GW2APIHandler.CheckAPI();
-            }
 
             if (_ticks.Save > 25 && _saveRotations)
             {
@@ -254,7 +147,7 @@ namespace Japyx.RotationHelper
             // Base handler must be called
             base.OnModuleLoaded(e);
 
-            TextureManager = new TextureManager();
+            TextureManager = new TextureManager(ContentsManager);
 
             CreateCornerIcons();
 
@@ -266,7 +159,7 @@ namespace Japyx.RotationHelper
         protected override void Unload()
         {
             Settings?.Dispose();
-            //RotationWindow?.Dispose();
+            RotationWindow?.Dispose();
             MainWindow?.Dispose();
             _cornerIcon?.Dispose();
 
@@ -283,11 +176,6 @@ namespace Japyx.RotationHelper
         private void OnRotationCollectionChanged(object sender, EventArgs e)
         {
             MainWindow?.CreateRotationControls(RotationModels);
-        }
-
-        private void Gw2ApiManager_SubtokenUpdated(object sender, ValueEventArgs<IEnumerable<TokenPermission>> e)
-        {
-            _ = GW2APIHandler.CheckAPI();
         }
 
         private void CreateCornerIcons()
@@ -315,19 +203,24 @@ namespace Japyx.RotationHelper
         {
             base.LoadGUI();
 
-            //var rotationsBg = AsyncTexture2D.FromAssetId(155997);
-            //Texture2D cutRotationsBg = rotationsBg.Texture.GetRegion(0, 0, rotationsBg.Width - 482, rotationsBg.Height - 390);
-            //RotationWindow = new(
-            //    rotationsBg,
-            //    new Rectangle(30, 30, cutRotationsBg.Width + 10, cutRotationsBg.Height),
-            //    new Rectangle(30, 35, cutRotationsBg.Width - 5, cutRotationsBg.Height - 15),
-            //    SharedSettingsView)
-            //{
-            //    Parent = GameService.Graphics.SpriteScreen,
-            //    Title = "Ajouter une rotation",
-            //    SavesPosition = true,
-            //    Id = $"RotationWindow",
-            //};
+            var rotationsBg = AsyncTexture2D.FromAssetId(155997);
+            Texture2D cutRotationsBg = rotationsBg.Texture.GetRegion(0, 0, rotationsBg.Width - 482, rotationsBg.Height - 390);
+            RotationWindow = new(
+                rotationsBg,
+                new Rectangle(30, 30, cutRotationsBg.Width + 10, cutRotationsBg.Height),
+                new Rectangle(30, 35, cutRotationsBg.Width - 5, cutRotationsBg.Height - 15),
+                SharedSettingsView,
+                Settings,
+                RotationModels,
+                Paths.ModulePath,
+                Data,
+                RequestRotationSave)
+            {
+                Parent = GameService.Graphics.SpriteScreen,
+                Title = "Ajouter une rotation",
+                SavesPosition = true,
+                Id = $"RotationWindow"
+            };
 
             Texture2D bg = TextureManager.GetBackground(Backgrounds.MainWindow);
             Texture2D cutBg = bg.GetRegion(25, 25, bg.Width - 100, bg.Height - 325);
@@ -336,14 +229,18 @@ namespace Japyx.RotationHelper
             bg,
             new Rectangle(25, 25, cutBg.Width + 10, cutBg.Height),
             new Rectangle(35, 14, cutBg.Width - 10, cutBg.Height - 10),
-            Settings)
+            Settings,
+            TextureManager,
+            RotationModels,
+            Data)
             {
                 Parent = GameService.Graphics.SpriteScreen,
                 Title = "Rotation Helper",
                 SavesPosition = true,
                 Id = $"MainWindow",
                 CanResize = true,
-                Size = new Point(385, 920)
+                Size = new Point(385, 920), //TODO: check
+                RotationWindow = RotationWindow
                 //Size = Settings.WindowSize.Value,
             };
         }

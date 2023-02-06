@@ -33,6 +33,8 @@ namespace Japyx.RotationHelper.Models
             _rotationModels = rotationModels;
             _data = data;
 
+            _initialized = true; //TODO: why ?
+
             Name = name;
         }
 
