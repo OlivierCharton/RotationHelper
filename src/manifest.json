@@ -1,19 +1,30 @@
 {
-  "name": "TemplateModule",
-  "version": "0.0.1",
-  "namespace": "Nekres.TemplateModule",
-  "package": "TemplateModule.dll",
-  "manifest_version": 1,
-  "description": "A template module for Blish-HUD.",
+  "api_permissions": {
+    "account": {
+      "optional": false,
+      "details": "Base API Requirement."
+    },
+    "characters": {
+      "optional": false,
+      "details": "Required to fetch the characters list and details."
+    }
+  },
+  "contributors": [
+    {
+      "name": "Japyx",
+      "username": "Japyx.3265"
+    }
+  ],
   "dependencies": {
     "bh.blishhud": ">=1.0.0"
   },
+  "description": "A module to practice your rotations.",
+  "directories": [ "japyx" ],
   "enabled_without_gw2": false,
-  "url": "https://github.com/agaertner/bhm-module-template",
-  "contributors": [
-    {
-      "name": "Nekres",
-      "username": "Nekres.1943"
-    }
-  ]
+  "manifest_version": 1,
+  "name": "RotationHelper",
+  "namespace": "Japyx.Modules.RotationHelper",
+  "package": "RotationHelper.dll",
+  "url": "https://github.com/OlivierCharton/RotationHelper",
+  "version": "0.0.1"
 }

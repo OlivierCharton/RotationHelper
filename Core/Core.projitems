@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>f7707a8f-b9b8-4b1c-87fc-b938b74968b2</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Japyx.Modules.Core</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\AnchoredContainer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\BasicTooltip.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\CornerIcon.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\Dummy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\FlowPanel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\FramedContainer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\FramedMaskedRegion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\Image.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\ImageButton.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\Label.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\MaskedRegion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\NumberBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\Panel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\TextBox.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controls\TitleHeader.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\BitMapExtension.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\DisposableExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\FileExtension.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\Texture2DExtension.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IFontControl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\ILocalizable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\BaseModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\BaseSettingsModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\GameStateChangedEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\PathCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ServiceCollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\SettingsModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ClientWindowService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\GameState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SharedSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Structs\RectangleDimensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utility\User32Dll.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\BaseTab.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\SharedSettingsView.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\StandardWindow.cs" />
+  </ItemGroup>
+</Project>
