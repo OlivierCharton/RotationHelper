@@ -19,7 +19,7 @@
     "bh.blishhud": ">=1.0.0"
   },
   "description": "A module to practice your rotations.",
-  "directories": [ "rotationhelper" ],
+  "directories": [ "japyx" ],
   "enabled_without_gw2": false,
   "manifest_version": 1,
   "name": "RotationHelper",

@@ -163,9 +163,10 @@ namespace Japyx.RotationHelper.Views
             {
                 if (RotationCards.Find(e => e.Rotation.Name == r.Name) == null)
                 {
-                    RotationCards.Add(new RotationCard(r, _textureManager, _data, this, _settings)
+                    RotationCards.Add(new RotationCard(_textureManager, _data, this, _settings)
                     {
-                        Parent = RotationPanel
+                        Parent = RotationPanel,
+                        Rotation = r,
                     });
                 }
             }

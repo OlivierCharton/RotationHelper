@@ -1,4 +1,5 @@
-﻿using Gw2Sharp.Models;
+﻿using Blish_HUD.Content;
+using Gw2Sharp.Models;
 using Gw2Sharp.WebApi.V2.Models;
 using Japyx.RotationHelper.Enums;
 using Japyx.RotationHelper.Services;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using static Japyx.RotationHelper.Services.Data;
 
 namespace Japyx.RotationHelper.Models
 {
@@ -19,6 +21,7 @@ namespace Japyx.RotationHelper.Models
         private bool _initialized;
 
         private string _name;
+        private ProfessionType _profession;
         private SpecializationType _specialization;
 
         public RotationModel()
@@ -35,7 +38,10 @@ namespace Japyx.RotationHelper.Models
 
             _initialized = true; //TODO: why ?
 
-            Name = name;
+            _name = name;
+            _profession = ProfessionType.Guardian; //TODO
+            //_profession = (ProfessionType)Enum.Parse(typeof(ProfessionType), character.Profession);
+            _specialization = SpecializationType.None;
         }
 
         public event EventHandler Updated;
@@ -50,6 +56,13 @@ namespace Japyx.RotationHelper.Models
         }
 
         [DataMember]
+        public ProfessionType Profession
+        {
+            get => _profession;
+            set => SetProperty(ref _profession, value);
+        }
+
+        [DataMember]
         public SpecializationType Specialization
         {
             get => _specialization;
@@ -57,10 +70,17 @@ namespace Japyx.RotationHelper.Models
         }
 
         //public List<RotationDetail> RotationDetails { get; set; }
+        public string ProfessionName => _data != null ? _data.Professions[Profession].Name : "Data not loaded.";
 
         public string SpecializationName => _data != null && Specialization != SpecializationType.None && Enum.IsDefined(typeof(SpecializationType), Specialization)
                     ? _data.Specializations[Specialization].Name
-                    : "Spé inconnue";
+                    : ProfessionName;
+
+        public AsyncTexture2D ProfessionIcon => _data?.Professions[Profession].IconBig;
+
+        public AsyncTexture2D SpecializationIcon => _data != null && Specialization != SpecializationType.None && Enum.IsDefined(typeof(SpecializationType), Specialization)
+                    ? _data.Specializations[Specialization].IconBig
+                    : ProfessionIcon;
 
         public string ModulePath { get; private set; }
 
@@ -98,9 +118,11 @@ namespace Japyx.RotationHelper.Models
             if (_initialized) _requestSave?.Invoke();
         }
 
-        public void UpdateRotation(string name)
+        public void UpdateRotation(string name, ProfessionType profession = ProfessionType.Guardian) //TODO
         {
             _name = name;
+            //_profession = (ProfessionType)Enum.Parse(typeof(ProfessionType), profession);
+            _profession = profession;
             _specialization = SpecializationType.None;
         }
 

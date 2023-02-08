@@ -1,6 +1,8 @@
 ﻿using Blish_HUD;
+using Blish_HUD.Content;
 using Blish_HUD.Controls;
 using Blish_HUD.Input;
+using Gw2Sharp.WebApi.V2.Models;
 using Japyx.Modules.Core.Controls;
 using Japyx.Modules.Core.Extensions;
 using Japyx.Modules.Core.Interfaces;
@@ -10,6 +12,7 @@ using Japyx.RotationHelper.Models;
 using Japyx.RotationHelper.Services;
 using Japyx.RotationHelper.Views;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.BitmapFonts;
 using System;
 using System.Collections.Generic;
@@ -26,6 +29,8 @@ namespace Japyx.RotationHelper.Controls
     public class RotationCard : Panel
     {
         private readonly List<Control> _dataControls = new();
+
+        private readonly AsyncTexture2D _iconFrame = AsyncTexture2D.FromAssetId(1414041);
 
         private readonly IconLabel _nameLabel;
 
@@ -54,9 +59,8 @@ namespace Japyx.RotationHelper.Controls
         private readonly ImageButton _delete;
 
 
-        public RotationCard(RotationModel rotation, TextureManager textureManager, Data data, MainWindow mainWindow, SettingsModel settings)
+        public RotationCard(TextureManager textureManager, Data data, MainWindow mainWindow, SettingsModel settings)
         {
-            _rotation = rotation;
             _textureManager = textureManager;
             _data = data;
             _mainWindow = mainWindow;
@@ -121,54 +125,6 @@ namespace Japyx.RotationHelper.Controls
             }
         }
 
-        protected override void OnClick(MouseEventArgs e)
-        {
-            base.OnClick(e);
-
-            if (e.IsDoubleClick)
-            {
-                //TODO: open rotation window
-                return;
-            }
-        }
-
-        protected override void DisposeControl()
-        {
-            base.DisposeControl();
-
-            if (_rotation != null)
-            {
-                _rotation.Updated -= ApplyRotation;
-                _rotation.Deleted -= RotationDeleted;
-            }
-
-            _dataControls?.DisposeAll();
-            _contentPanel?.Dispose();
-
-            Children.DisposeAll();
-            _ = _mainWindow.RotationCards.Remove(this);
-        }
-
-        private BitmapFont GetFont(bool nameFont = false)
-        {
-            FontSize fontSize = nameFont ? FontSize.Size16 : FontSize.Size12;
-
-            return GameService.Content.GetFont(FontFace.Menomonia, fontSize, FontStyle.Regular);
-        }
-
-        private void RotationDeleted(object sender, EventArgs e)
-        {
-            Dispose();
-        }
-
-        private void ApplyRotation(object sender, EventArgs e)
-        {
-            _nameLabel.Text = Rotation.Name;
-            _nameLabel.TextColor = new Color(168 + 15 + 25, 143 + 20 + 25, 102 + 15 + 25, 255);
-
-            UniformWithAttached();
-        }
-
         public Rectangle ControlContentBounds
         {
             get => _controlBounds;
@@ -189,8 +145,7 @@ namespace Japyx.RotationHelper.Controls
 
             if (_lastUniform != now)
             {
-                
-                    ControlContentBounds = CalculateLayout();
+                ControlContentBounds = CalculateLayout();
             }
         }
 
@@ -237,6 +192,120 @@ namespace Japyx.RotationHelper.Controls
             }
 
             return _controlBounds;
+        }
+
+        public override void RecalculateLayout()
+        {
+            base.RecalculateLayout();
+        }
+
+        public override void PaintBeforeChildren(SpriteBatch spriteBatch, Rectangle bounds)
+        {
+            base.PaintBeforeChildren(spriteBatch, bounds);
+
+            spriteBatch.DrawOnCtrl(
+                this,
+                Textures.Pixel,
+                _iconRectangle,
+                Rectangle.Empty,
+                Color.Transparent,
+                0f,
+                default);
+
+            if (Rotation != null)
+            {
+                AsyncTexture2D texture = Rotation.SpecializationIcon;
+
+                if (texture != null)
+                {
+                    spriteBatch.DrawOnCtrl(
+                        this,
+                        _iconFrame,
+                        new Rectangle(_iconRectangle.X, _iconRectangle.Y, _iconRectangle.Width, _iconRectangle.Height),
+                        _iconFrame.Bounds,
+                        Color.White,
+                        0f,
+                        default);
+
+                    spriteBatch.DrawOnCtrl(
+                        this,
+                        _iconFrame,
+                        new Rectangle(_iconRectangle.Width, _iconRectangle.Height, _iconRectangle.Width, _iconRectangle.Height),
+                        _iconFrame.Bounds,
+                        Color.White,
+                        6.28f / 2,
+                        default);
+
+                    spriteBatch.DrawOnCtrl(
+                        this,
+                        texture,
+                        new Rectangle(8, 8, _iconRectangle.Width - 16, _iconRectangle.Height - 16),
+                        texture.Bounds,
+                        Color.White,
+                        0f,
+                        default);
+                }
+            }
+        }
+
+        public override void PaintAfterChildren(SpriteBatch spriteBatch, Rectangle bounds)
+        {
+            base.PaintAfterChildren(spriteBatch, bounds);
+        }
+
+        public override void UpdateContainer(GameTime gameTime)
+        {
+            base.UpdateContainer(gameTime);
+        }
+
+        protected override void OnClick(MouseEventArgs e)
+        {
+            base.OnClick(e);
+
+            if (e.IsDoubleClick)
+            {
+                //TODO : open rotaton
+                return;
+            }
+        }
+
+        protected override void DisposeControl()
+        {
+            base.DisposeControl();
+
+            if (_rotation != null)
+            {
+                _rotation.Updated -= ApplyRotation;
+                _rotation.Deleted -= RotationDeleted;
+            }
+
+            _dataControls?.DisposeAll();
+            _contentPanel?.Dispose();
+
+            _iconFrame.Dispose();
+
+            Children.DisposeAll();
+            _ = _mainWindow.RotationCards.Remove(this);
+        }
+
+        private BitmapFont GetFont(bool nameFont = false)
+        {
+            FontSize fontSize = nameFont ? FontSize.Size16 : FontSize.Size12;
+
+            return GameService.Content.GetFont(FontFace.Menomonia, fontSize, FontStyle.Regular);
+        }
+
+        private void RotationDeleted(object sender, EventArgs e)
+        {
+            Dispose();
+        }
+
+        private void ApplyRotation(object sender, EventArgs e)
+        {
+            _nameLabel.Text = Rotation.Name;
+            _nameLabel.TextColor = new Color(168 + 15 + 25, 143 + 20 + 25, 102 + 15 + 25, 255);
+
+            UniformWithAttached();
         }
 
         private void UpdateDataControlsVisibility()

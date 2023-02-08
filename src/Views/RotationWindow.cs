@@ -85,7 +85,9 @@ namespace Japyx.RotationHelper.Views
         {
             var rotation = new RotationModel
             {
-                Name = input
+                Name = input,
+                Profession = Gw2Sharp.Models.ProfessionType.Guardian,
+                Specialization = Enums.SpecializationType.None
             };
 
             var i = 1;
